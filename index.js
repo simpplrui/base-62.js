@@ -1,10 +1,5 @@
-/*!
- * base-62.js (c) 2015 Brian Norton
- * This library may be freely distributed under the MIT license.
- */
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.base62 = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.base62 = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 var Big = require('big.js'),
-  generate = require('random.js').randomInt,
   characterSet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 var Base62 = {
@@ -51,14 +46,7 @@ var Base62 = {
   id: function(short) {
     return short ? Base62.decodeHex(short) : null;
   },
-  token: function() {
-    return random()+random()+random()+random()+random();
-  }
 };
-
-function random() {
-  return Base62.encode(generate());
-}
 
 function intToHex(decStr) {
   var hex = convertBase(decStr, 10, 16);
@@ -140,13 +128,13 @@ function convertBase(str, fromBase, toBase) {
 
 module.exports = Base62;
 
-},{"big.js":2,"random.js":3}],2:[function(require,module,exports){
-/* big.js v3.0.2 https://github.com/MikeMcl/big.js/LICENCE */
+},{"big.js":2}],2:[function(require,module,exports){
+/* big.js v3.1.3 https://github.com/MikeMcl/big.js/LICENCE */
 ;(function (global) {
     'use strict';
 
 /*
-  big.js v3.0.2
+  big.js v3.1.3
   A small, fast, easy-to-use library for arbitrary-precision decimal arithmetic.
   https://github.com/MikeMcl/big.js/
   Copyright (c) 2014 Michael Mclaughlin <M8ch88l@gmail.com>
@@ -185,7 +173,7 @@ module.exports = Base62;
          * JavaScript's Number type: -7
          * -1000000 is the minimum recommended exponent value of a Big.
          */
-        TO_EXP_NEG = -7,                   // 0 to -1000000
+        E_NEG = -7,                   // 0 to -1000000
 
         /*
          * The exponent value at and above which toString returns exponential
@@ -194,7 +182,7 @@ module.exports = Base62;
          * 1000000 is the maximum recommended exponent value of a Big.
          * (This limit is not enforced or checked.)
          */
-        TO_EXP_POS = 21,                   // 0 to 1000000
+        E_POS = 21,                   // 0 to 1000000
 
 /******************************************************************************/
 
@@ -243,6 +231,8 @@ module.exports = Base62;
         Big.prototype = P;
         Big.DP = DP;
         Big.RM = RM;
+        Big.E_NEG = E_NEG;
+        Big.E_POS = E_POS;
 
         return Big;
     }
@@ -295,7 +285,7 @@ module.exports = Base62;
          * necessary to represent the integer part of the value in normal
          * notation.
          */
-        return toE === 1 || toE && (dp <= i || i <= TO_EXP_NEG) ?
+        return toE === 1 || toE && (dp <= i || i <= Big.E_NEG) ?
 
           // Exponential notation.
           (x.s < 0 && c[0] ? '-' : '') +
@@ -349,25 +339,28 @@ module.exports = Base62;
             e = n.length;
         }
 
+        nL = n.length;
+
         // Determine leading zeros.
-        for (i = 0; n.charAt(i) == '0'; i++) {
+        for (i = 0; i < nL && n.charAt(i) == '0'; i++) {
         }
 
-        if (i == (nL = n.length)) {
+        if (i == nL) {
 
             // Zero.
             x.c = [ x.e = 0 ];
         } else {
 
             // Determine trailing zeros.
-            for (; n.charAt(--nL) == '0';) {
+            for (; nL > 0 && n.charAt(--nL) == '0';) {
             }
 
             x.e = e - i - 1;
             x.c = [];
 
             // Convert string to array of digits without leading/trailing zeros.
-            for (e = 0; i <= nL; x.c[e++] = +n.charAt(i++)) {
+            //for (e = 0; i <= nL; x.c[e++] = +n.charAt(i++)) {
+            for (; i <= nL; x.c.push(+n.charAt(i++))) {
             }
         }
 
@@ -1129,17 +1122,18 @@ module.exports = Base62;
     /*
      * Return a string representing the value of this Big.
      * Return exponential notation if this Big has a positive exponent equal to
-     * or greater than TO_EXP_POS, or a negative exponent equal to or less than
-     * TO_EXP_NEG.
+     * or greater than Big.E_POS, or a negative exponent equal to or less than
+     * Big.E_NEG.
      */
     P.toString = P.valueOf = P.toJSON = function () {
         var x = this,
+            Big = x.constructor,
             e = x.e,
             str = x.c.join(''),
             strL = str.length;
 
         // Exponential notation?
-        if (e <= TO_EXP_NEG || e >= TO_EXP_POS) {
+        if (e <= Big.E_NEG || e >= Big.E_POS) {
             str = str.charAt(0) + (strL > 1 ? '.' + str.slice(1) : '') +
               (e < 0 ? 'e' : 'e+') + e;
 
@@ -1210,11 +1204,12 @@ module.exports = Base62;
     P.toFixed = function (dp) {
         var str,
             x = this,
-            neg = TO_EXP_NEG,
-            pos = TO_EXP_POS;
+            Big = x.constructor,
+            neg = Big.E_NEG,
+            pos = Big.E_POS;
 
         // Prevent the possibility of exponential notation.
-        TO_EXP_NEG = -(TO_EXP_POS = 1 / 0);
+        Big.E_NEG = -(Big.E_POS = 1 / 0);
 
         if (dp == null) {
             str = x.toString();
@@ -1228,8 +1223,8 @@ module.exports = Base62;
                 str = '-' + str;
             }
         }
-        TO_EXP_NEG = neg;
-        TO_EXP_POS = pos;
+        Big.E_NEG = neg;
+        Big.E_POS = pos;
 
         if (!str) {
             throwErr('!toFix!');
@@ -1273,114 +1268,13 @@ module.exports = Base62;
     // Node and other CommonJS-like environments that support module.exports.
     } else if (typeof module !== 'undefined' && module.exports) {
         module.exports = Big;
+        module.exports.Big = Big;
 
     //Browser.
     } else {
         global.Big = Big;
     }
 })(this);
-
-},{}],3:[function(require,module,exports){
-/*!
-* @fn randomInt(options)
-* @brief generate random integers
-* @param options.min the minimum value (default: 0)
-* @param options.max the maximum value (default: 4294967295)
-* @return an integer between the min/max bounds
-*/
-randomInt = function(options)
-{
-	if (options === undefined || options === null)
-		options = {}
-	if (options.min === undefined || options === null)
-		options.min = 0
-	if (options.max === undefined || options === null)
-		options.max = 4294967295
-	if (options.min > options.max) {
-		var tmp = options.min
-		options.min = options.max
-		options.max = tmp
-	}
-
-	return Math.floor((Math.random() * (options.max - options.min)) + options.min)
-}
-
-/*!
-* @fn randomFloat(options)
-* @brief generate random floats
-* @param options.min the minimum value (default: 0.0)
-* @param options.max the maximum value (default: 1.0)
-* @return a float between the min/max bounds
-*/
-randomFloat = function(options)
-{
-	if (options === undefined || options === null)
-		options = {}
-	if (options.min === undefined || options === null)
-		options.min = 0.0
-	if (options.max === undefined || options === null)
-		options.max = 1.0
-
-	return (Math.random() * (options.max - options.min)) + options.min
-}
-
-/*!
- * @fn randomString(options)
- * @brief generate random strings
- * @param options.length the length of the string to generate (default: 20)
- * @param options.set one of alpha|numeric|alphanum|hex|custom (default: alphanum)
- * @param options.custom if set is custom, provides a set of characters used for the string generation (string or array)
- * @returns a string containing random characters from the selected set of the given length
- * @discussion when generating a string of hexadecimal set, the alpha-characters are uppercase, use .toLowerCase() on the result to switch to lowercase
- */
-randomString = function(options)
-{
-	if (options === undefined || options === null)
-		options = {}
-	if (options.length === undefined || options.length === null)
-		options.length = 20
-	if (options.set === undefined || options.set === null)
-		options.set = "alphanum"
-
-	var charset
-	switch (options.set)
-	{
-		case "alpha":
-			charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			break
-
-		case "alphanum":
-			charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-			break
-
-		case "num":
-			charset = "0123456789"
-			break
-
-		case "hex":
-			charset = "0123456789ABCDEF"
-			break
-
-		case "custom":
-			if (options.custom === undefined || options.custom === null) {
-				console.error("can't generate a random string with custom set of characters if options.custom is null or undefined")
-				return ""
-			}
-			charset = options.custom
-			break
-	}
-
-	var result = ""
-	for (var i = 0; i < options.length; i++) {
-		var int = randomInt({min: 0, max: charset.length})
-		result += charset[int]
-	}
-	return result
-}
-
-module.exports.randomInt = randomInt
-module.exports.randomFloat = randomFloat
-module.exports.randomString = randomString
 
 },{}]},{},[1])(1)
 });

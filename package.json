@@ -12,8 +12,7 @@
     "ObjectID"
   ],
   "dependencies": {
-    "big.js": "3.x",
-    "random.js": "0.1.0"
+    "big.js": "3.x"
   },
   "devDependencies": {
     "minijasminenode2": "bnorton/minijasminenode"
